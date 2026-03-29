@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive icon foreground: Nomadly "N" lettermark.
+    Canvas: 108×108dp  |  Safe zone: 18–90dp on each axis.
+    The three shapes (left bar, diagonal, right bar) sit fully
+    inside the safe zone and assemble into a bold block "N".
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Left vertical bar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,28 L42,28 L42,80 L30,80 Z" />
+
+    <!-- Diagonal stroke (top-left → bottom-right) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,28 L54,28 L66,80 L54,80 Z" />
+
+    <!-- Right vertical bar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,28 L78,28 L78,80 L66,80 Z" />
+
+</vector>
