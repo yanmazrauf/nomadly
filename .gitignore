@@ -1,0 +1,41 @@
+# Claude Code session data
+.claude/
+
+# Gradle build outputs
+.gradle/
+build/
+**/build/
+out/
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+*.idea/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+*.class
+*.kotlin_module
+
+# Generated files
+gen/
+generated/
+
+# Keystore files (never commit)
+*.jks
+*.keystore
+
+# Google services (keep private)
+google-services.json
+GoogleService-Info.plist
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (future web/scripts)
+node_modules/
+npm-debug.log*
