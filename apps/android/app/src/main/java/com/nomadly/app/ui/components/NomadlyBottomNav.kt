@@ -16,9 +16,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,13 +57,13 @@ val bottomNavItems = listOf(
         label = "Saved",
         route = Screen.SavedBoards.route,
         activeIcon = Icons.Filled.Bookmark,
-        inactiveIcon = Icons.Outlined.BookmarkBorder
+        inactiveIcon = Icons.Outlined.Bookmark
     ),
     BottomNavItem(
         label = "Profile",
         route = Screen.Profile.route,
         activeIcon = Icons.Filled.Person,
-        inactiveIcon = Icons.Outlined.PersonOutline
+        inactiveIcon = Icons.Outlined.Person
     )
 )
 
