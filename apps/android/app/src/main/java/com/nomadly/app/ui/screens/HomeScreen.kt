@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -165,7 +166,7 @@ private fun HomeErrorContent(message: String, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun HomeSuccessContent(
+private fun ColumnScope.HomeSuccessContent(
     uiState: HomeUiState.Success,
     swipeDeckState: com.nomadly.app.ui.components.SwipeDeckState,
     onCategorySelected: (String) -> Unit,
