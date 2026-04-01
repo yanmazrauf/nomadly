@@ -27,9 +27,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nomadly.app.ui.theme.BrandTeal
+import com.nomadly.app.ui.theme.Cream
 import com.nomadly.app.ui.theme.ManropeFontFamily
 import com.nomadly.app.ui.theme.NomadlyTheme
 import com.nomadly.app.ui.theme.PrimaryText
+import com.nomadly.app.ui.theme.SurfaceAlt
 import com.nomadly.app.ui.theme.White
 
 @Composable
@@ -45,10 +47,10 @@ fun NomadlyTopBar(
             .fillMaxWidth()
             .background(
                 if (isTransparent) Color.Transparent
-                else White.copy(alpha = 0.85f)
+                else Cream.copy(alpha = 0.96f)
             )
             .statusBarsPadding()
-            .height(64.dp)
+            .height(60.dp)
     ) {
         Row(
             modifier = Modifier
@@ -64,7 +66,7 @@ fun NomadlyTopBar(
                     .clip(CircleShape)
                     .background(
                         if (isTransparent) White.copy(alpha = 0.15f)
-                        else White.copy(alpha = 0.0f)
+                        else Color.Transparent
                     )
                     .clickable { onMenuClick() },
                 contentAlignment = Alignment.Center
@@ -77,15 +79,17 @@ fun NomadlyTopBar(
                 )
             }
 
-            // Title
-            Text(
-                text = title,
-                fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = if (isTransparent) White else BrandTeal,
-                letterSpacing = (-0.3).sp
-            )
+            // Title / logo
+            if (title.isNotEmpty()) {
+                Text(
+                    text = title,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 17.sp,
+                    color = if (isTransparent) White else BrandTeal,
+                    letterSpacing = (-0.5).sp
+                )
+            }
 
             // Notification button
             if (onNotificationClick != null) {
@@ -95,7 +99,7 @@ fun NomadlyTopBar(
                         .clip(CircleShape)
                         .background(
                             if (isTransparent) White.copy(alpha = 0.15f)
-                            else White.copy(alpha = 0.0f)
+                            else SurfaceAlt.copy(alpha = 0.6f)
                         )
                         .clickable { onNotificationClick() },
                     contentAlignment = Alignment.Center
@@ -120,6 +124,18 @@ fun NomadlyTopBarPreview() {
     NomadlyTheme {
         NomadlyTopBar(
             title = "Nomadly",
+            onNotificationClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF006768)
+@Composable
+fun NomadlyTopBarTransparentPreview() {
+    NomadlyTheme {
+        NomadlyTopBar(
+            title = "Nomadly",
+            isTransparent = true,
             onNotificationClick = {}
         )
     }

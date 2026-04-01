@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -34,14 +35,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,18 +61,71 @@ import com.nomadly.app.ui.theme.NotoSerifFontFamily
 import com.nomadly.app.ui.theme.White
 import kotlinx.coroutines.launch
 
+private const val SWIPE_THRESHOLD = 320f
+private const val FLY_OFF_TARGET = 1800f
+
+// ─── State ───────────────────────────────────────────────────────────────────
+
+class SwipeDeckState {
+    var triggerLeft by mutableIntStateOf(0)
+        private set
+    var triggerRight by mutableIntStateOf(0)
+        private set
+
+    fun swipeLeft() { triggerLeft++ }
+    fun swipeRight() { triggerRight++ }
+}
+
+@Composable
+fun rememberSwipeDeckState(): SwipeDeckState = remember { SwipeDeckState() }
+
+// ─── SwipeDeck ───────────────────────────────────────────────────────────────
+
 @Composable
 fun SwipeDeck(
     destinations: List<Destination>,
     onSwipedLeft: (Destination) -> Unit,
     onSwipedRight: (Destination) -> Unit,
     onCardClick: (Destination) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    state: SwipeDeckState? = null,
+    onRemainingChanged: (Int) -> Unit = {}
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+
+    // Report remaining count whenever index changes
+    LaunchedEffect(currentIndex, destinations.size) {
+        onRemainingChanged((destinations.size - currentIndex).coerceAtLeast(0))
+    }
+
+    // Programmatic swipe left (e.g. from dislike button)
+    LaunchedEffect(state?.triggerLeft) {
+        val trigger = state?.triggerLeft ?: return@LaunchedEffect
+        if (trigger > 0 && currentIndex < destinations.size) {
+            val destination = destinations[currentIndex]
+            offsetX.animateTo(-FLY_OFF_TARGET, tween(280))
+            onSwipedLeft(destination)
+            currentIndex++
+            offsetX.snapTo(0f)
+            offsetY.snapTo(0f)
+        }
+    }
+
+    // Programmatic swipe right (e.g. from like button)
+    LaunchedEffect(state?.triggerRight) {
+        val trigger = state?.triggerRight ?: return@LaunchedEffect
+        if (trigger > 0 && currentIndex < destinations.size) {
+            val destination = destinations[currentIndex]
+            offsetX.animateTo(FLY_OFF_TARGET, tween(280))
+            onSwipedRight(destination)
+            currentIndex++
+            offsetX.snapTo(0f)
+            offsetY.snapTo(0f)
+        }
+    }
 
     val visibleDestinations = remember(currentIndex) {
         destinations.drop(currentIndex).take(3)
@@ -78,32 +133,10 @@ fun SwipeDeck(
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (currentIndex >= destinations.size) {
-            // All swiped — show end state
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.72f)
-                    .clip(RoundedCornerShape(48.dp))
-                    .background(CreamSurface),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "You've explored them all!",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = BrandTeal
-                    )
-                    Text(
-                        text = "Check your saved boards for your favourites.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            AllSwipedEmptyState()
         } else {
+            val swipeProgress = (offsetX.value / SWIPE_THRESHOLD).coerceIn(-1f, 1f)
+
             visibleDestinations.asReversed().forEachIndexed { reverseIndex, destination ->
                 val stackIndex = visibleDestinations.size - 1 - reverseIndex
                 val isTopCard = stackIndex == 0
@@ -113,31 +146,31 @@ fun SwipeDeck(
                     1 -> 0.95f
                     else -> 0.90f
                 }
-                val translationYDp = when (stackIndex) {
+                val translateYDp = when (stackIndex) {
                     0 -> 0f
-                    1 -> -20f
-                    else -> -40f
+                    1 -> 16f
+                    else -> 32f
                 }
                 val alpha = when (stackIndex) {
                     0 -> 1f
-                    1 -> 0.85f
-                    else -> 0.70f
+                    1 -> 0.88f
+                    else -> 0.72f
                 }
 
                 key(currentIndex + stackIndex) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(0.72f)
+                            .aspectRatio(0.70f)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale
-                                translationY = translationYDp.dp.toPx()
+                                translationY = translateYDp.dp.toPx()
                                 this.alpha = alpha
                                 if (isTopCard) {
                                     translationX = offsetX.value
-                                    translationY += offsetY.value
-                                    rotationZ = offsetX.value * 0.04f
+                                    translationY += offsetY.value * 0.4f
+                                    rotationZ = offsetX.value * 0.035f
                                 }
                             }
                             .then(
@@ -146,41 +179,32 @@ fun SwipeDeck(
                                         detectDragGestures(
                                             onDragEnd = {
                                                 scope.launch {
-                                                    val threshold = 400f
                                                     when {
-                                                        offsetX.value > threshold -> {
-                                                            offsetX.animateTo(
-                                                                2000f,
-                                                                tween(300)
-                                                            )
+                                                        offsetX.value > SWIPE_THRESHOLD -> {
+                                                            offsetX.animateTo(FLY_OFF_TARGET, tween(280))
                                                             onSwipedRight(destination)
                                                             currentIndex++
                                                             offsetX.snapTo(0f)
                                                             offsetY.snapTo(0f)
                                                         }
-
-                                                        offsetX.value < -threshold -> {
-                                                            offsetX.animateTo(
-                                                                -2000f,
-                                                                tween(300)
-                                                            )
+                                                        offsetX.value < -SWIPE_THRESHOLD -> {
+                                                            offsetX.animateTo(-FLY_OFF_TARGET, tween(280))
                                                             onSwipedLeft(destination)
                                                             currentIndex++
                                                             offsetX.snapTo(0f)
                                                             offsetY.snapTo(0f)
                                                         }
-
                                                         else -> {
                                                             launch {
                                                                 offsetX.animateTo(
                                                                     0f,
-                                                                    spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                                                                    spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow)
                                                                 )
                                                             }
                                                             launch {
                                                                 offsetY.animateTo(
                                                                     0f,
-                                                                    spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                                                                    spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow)
                                                                 )
                                                             }
                                                         }
@@ -201,7 +225,8 @@ fun SwipeDeck(
                     ) {
                         DestinationCardContent(
                             destination = destination,
-                            onClick = { if (isTopCard) onCardClick(destination) }
+                            onClick = { if (isTopCard) onCardClick(destination) },
+                            swipeProgress = if (isTopCard) swipeProgress else 0f
                         )
                     }
                 }
@@ -210,24 +235,30 @@ fun SwipeDeck(
     }
 }
 
+// ─── Card Content ─────────────────────────────────────────────────────────────
+
 @Composable
 fun DestinationCardContent(
     destination: Destination,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    swipeProgress: Float = 0f
 ) {
+    val saveAlpha = (swipeProgress * 2.5f).coerceIn(0f, 1f)
+    val skipAlpha = (-swipeProgress * 2.5f).coerceIn(0f, 1f)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(48.dp),
-                ambientColor = Color(0x1A1C1C18),
+                elevation = 20.dp,
+                shape = RoundedCornerShape(44.dp),
+                ambientColor = Color(0x141C1C18),
                 spotColor = Color(0x1A1C1C18)
             )
-            .clip(RoundedCornerShape(48.dp))
+            .clip(RoundedCornerShape(44.dp))
             .clickable { onClick() }
     ) {
-        // Full-bleed image
+        // Full-bleed photo
         AsyncImage(
             model = destination.imageUrl,
             contentDescription = destination.name,
@@ -235,40 +266,83 @@ fun DestinationCardContent(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Gradient overlay bottom-to-top
+        // Bottom gradient scrim
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.25f),
-                            Color.Black.copy(alpha = 0.70f)
+                        colorStops = arrayOf(
+                            0.0f to Color.Transparent,
+                            0.45f to Color.Transparent,
+                            0.70f to Color.Black.copy(alpha = 0.20f),
+                            0.85f to Color.Black.copy(alpha = 0.55f),
+                            1.0f to Color.Black.copy(alpha = 0.80f)
                         )
                     )
                 )
         )
 
-        // Content at the bottom
+        // SAVE overlay (swiping right)
+        if (saveAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(28.dp)
+                    .rotate(-18f)
+                    .alpha(saveAlpha)
+                    .border(3.dp, BrandTeal, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "SAVE",
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 26.sp,
+                    color = BrandTeal,
+                    letterSpacing = 2.sp
+                )
+            }
+        }
+
+        // SKIP overlay (swiping left)
+        if (skipAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(28.dp)
+                    .rotate(18f)
+                    .alpha(skipAlpha)
+                    .border(3.dp, Destructive, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "SKIP",
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 26.sp,
+                    color = Destructive,
+                    letterSpacing = 2.sp
+                )
+            }
+        }
+
+        // Card info (bottom)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(horizontal = 28.dp, vertical = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 28.dp, vertical = 30.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Tags row
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            // Tags
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 destination.tags.take(2).forEach { tag ->
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
-                            .background(White.copy(alpha = 0.20f))
-                            .border(1.dp, White.copy(alpha = 0.35f), RoundedCornerShape(999.dp))
-                            .padding(horizontal = 14.dp, vertical = 5.dp)
+                            .background(White.copy(alpha = 0.18f))
+                            .border(1.dp, White.copy(alpha = 0.30f), RoundedCornerShape(999.dp))
+                            .padding(horizontal = 12.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = tag,
@@ -276,7 +350,7 @@ fun DestinationCardContent(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp,
                             color = White,
-                            letterSpacing = 0.5.sp
+                            letterSpacing = 0.4.sp
                         )
                     }
                 }
@@ -287,9 +361,9 @@ fun DestinationCardContent(
                 text = destination.name,
                 fontFamily = NotoSerifFontFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
+                fontSize = 30.sp,
                 color = White,
-                lineHeight = 36.sp,
+                lineHeight = 34.sp,
                 letterSpacing = (-0.5).sp
             )
 
@@ -298,13 +372,52 @@ fun DestinationCardContent(
                 text = "${destination.region}, ${destination.country}",
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                color = White.copy(alpha = 0.80f),
-                letterSpacing = 0.3.sp
+                fontSize = 14.sp,
+                color = White.copy(alpha = 0.75f),
+                letterSpacing = 0.2.sp
             )
         }
     }
 }
+
+// ─── Empty State ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun AllSwipedEmptyState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(0.70f)
+            .clip(RoundedCornerShape(44.dp))
+            .background(CreamSurface),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "✦",
+                fontSize = 40.sp,
+                color = BrandTeal.copy(alpha = 0.3f)
+            )
+            Text(
+                text = "You've explored them all",
+                style = MaterialTheme.typography.headlineSmall,
+                color = BrandTeal
+            )
+            Text(
+                text = "Check your Saved boards\nfor your favourites.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+// ─── Action Buttons ──────────────────────────────────────────────────────────
 
 @Composable
 fun SwipeActionButtons(
@@ -314,22 +427,22 @@ fun SwipeActionButtons(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(32.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Dislike button
+        // Dislike
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(60.dp)
                 .shadow(
                     elevation = 8.dp,
                     shape = CircleShape,
-                    ambientColor = Destructive.copy(alpha = 0.2f),
-                    spotColor = Destructive.copy(alpha = 0.2f)
+                    ambientColor = Destructive.copy(alpha = 0.15f),
+                    spotColor = Destructive.copy(alpha = 0.20f)
                 )
                 .clip(CircleShape)
                 .background(White)
-                .border(1.5.dp, Destructive.copy(alpha = 0.3f), CircleShape)
+                .border(1.5.dp, Destructive.copy(alpha = 0.25f), CircleShape)
                 .clickable { onDislike() },
             contentAlignment = Alignment.Center
         ) {
@@ -337,19 +450,19 @@ fun SwipeActionButtons(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Skip",
                 tint = Destructive,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
 
-        // Like button
+        // Like
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(72.dp)
                 .shadow(
-                    elevation = 8.dp,
+                    elevation = 12.dp,
                     shape = CircleShape,
-                    ambientColor = BrandTeal.copy(alpha = 0.25f),
-                    spotColor = BrandTeal.copy(alpha = 0.25f)
+                    ambientColor = BrandTeal.copy(alpha = 0.22f),
+                    spotColor = BrandTeal.copy(alpha = 0.28f)
                 )
                 .clip(CircleShape)
                 .background(BrandTeal)
@@ -360,11 +473,36 @@ fun SwipeActionButtons(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = "Save",
                 tint = AccentCyan,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(30.dp)
+            )
+        }
+
+        // Dislike mirror (spacing balance — invisible placeholder or a "super like" / info icon)
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = CircleShape,
+                    ambientColor = Color(0x10000000),
+                    spotColor = Color(0x10000000)
+                )
+                .clip(CircleShape)
+                .background(White)
+                .border(1.5.dp, BrandTeal.copy(alpha = 0.20f), CircleShape)
+                .clickable { /* info / super-like */ },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "✦",
+                fontSize = 20.sp,
+                color = BrandTeal.copy(alpha = 0.7f)
             )
         }
     }
 }
+
+// ─── Previews ─────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFFFCF9F2)
 @Composable
@@ -374,7 +512,8 @@ fun SwipeDeckPreview() {
             destinations = MockRepository.destinations,
             onSwipedLeft = {},
             onSwipedRight = {},
-            onCardClick = {}
+            onCardClick = {},
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

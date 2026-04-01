@@ -1,5 +1,12 @@
 package com.nomadly.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -34,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nomadly.app.navigation.Screen
 import com.nomadly.app.ui.theme.BrandTeal
+import com.nomadly.app.ui.theme.Cream
 import com.nomadly.app.ui.theme.ManropeFontFamily
 import com.nomadly.app.ui.theme.NomadlyTheme
 import com.nomadly.app.ui.theme.SecondaryText
@@ -76,27 +85,28 @@ fun NomadlyBottomNav(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 24.dp,
-                shape = RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp),
+                elevation = 32.dp,
+                shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
+                ambientColor = Color(0x14000000),
+                spotColor = Color(0x1A000000),
                 clip = false
             )
-            .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp))
-            .background(White.copy(alpha = 0.92f))
+            .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+            .background(Cream.copy(alpha = 0.97f))
             .navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(72.dp)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 32.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             bottomNavItems.forEach { item ->
-                val isActive = currentRoute == item.route
                 BottomNavItemView(
                     item = item,
-                    isActive = isActive,
+                    isActive = currentRoute == item.route,
                     onClick = { onNavigate(item.route) }
                 )
             }
@@ -110,67 +120,96 @@ private fun BottomNavItemView(
     isActive: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .then(
-                if (isActive) Modifier.background(BrandTeal)
-                else Modifier
-            )
             .clickable { onClick() }
-            .padding(horizontal = if (isActive) 20.dp else 12.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        if (isActive) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = item.activeIcon,
-                    contentDescription = item.label,
-                    tint = White,
-                    modifier = Modifier.size(20.dp)
+        // Icon pill
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .then(
+                    if (isActive) Modifier.background(BrandTeal)
+                    else Modifier
                 )
+                .padding(
+                    horizontal = if (isActive) 20.dp else 12.dp,
+                    vertical = 9.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = if (isActive) item.activeIcon else item.inactiveIcon,
+                contentDescription = item.label,
+                tint = if (isActive) White else SecondaryText.copy(alpha = 0.45f),
+                modifier = Modifier.size(20.dp)
+            )
+            AnimatedVisibility(
+                visible = isActive,
+                enter = expandHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(),
+                exit = shrinkHorizontally() + fadeOut()
+            ) {
                 Text(
                     text = item.label,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = White,
-                    letterSpacing = 0.sp
+                    color = White
                 )
             }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = item.inactiveIcon,
-                    contentDescription = item.label,
-                    tint = SecondaryText.copy(alpha = 0.5f),
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = item.label,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 10.sp,
-                    color = SecondaryText.copy(alpha = 0.5f),
-                    letterSpacing = 0.sp
-                )
-            }
+        }
+
+        // Inactive label below icon pill
+        AnimatedVisibility(
+            visible = !isActive,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = item.label,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
+                color = SecondaryText.copy(alpha = 0.45f)
+            )
+        }
+
+        // Active indicator dot (hidden when active to avoid extra height)
+        if (isActive) {
+            Box(modifier = Modifier.height(4.dp).width(1.dp))
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFFFCF9F2)
 @Composable
 fun NomadlyBottomNavPreview() {
     NomadlyTheme {
+        Column {
+            NomadlyBottomNav(
+                currentRoute = Screen.Home.route,
+                onNavigate = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFCF9F2)
+@Composable
+fun NomadlyBottomNavSavedPreview() {
+    NomadlyTheme {
         NomadlyBottomNav(
-            currentRoute = Screen.Home.route,
+            currentRoute = Screen.SavedBoards.route,
             onNavigate = {}
         )
     }

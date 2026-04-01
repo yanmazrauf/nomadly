@@ -1,13 +1,14 @@
 package com.nomadly.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,15 +66,13 @@ import com.nomadly.app.ui.theme.NotoSerifFontFamily
 import com.nomadly.app.ui.theme.PrimaryText
 import com.nomadly.app.ui.theme.RustOrange
 import com.nomadly.app.ui.theme.SecondaryText
+import com.nomadly.app.ui.theme.SurfaceAlt
 import com.nomadly.app.ui.theme.TealAlt
 import com.nomadly.app.ui.theme.White
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileScreen(
-    navController: NavController
-) {
-    val currentRoute = Screen.Profile.route
+fun ProfileScreen(navController: NavController) {
     val profile = MockRepository.userProfile
 
     Scaffold(
@@ -87,7 +86,7 @@ fun ProfileScreen(
         },
         bottomBar = {
             NomadlyBottomNav(
-                currentRoute = currentRoute,
+                currentRoute = Screen.Profile.route,
                 onNavigate = { route ->
                     navController.navigate(route) {
                         popUpTo(Screen.Home.route) { saveState = true }
@@ -103,52 +102,39 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Cream),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                horizontal = 24.dp,
-                vertical = 0.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Profile header
+            // ── Profile header ────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp),
+                        .padding(top = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     // Avatar with gradient ring
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(136.dp)
-                    ) {
-                        // Gradient ring
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(120.dp)) {
                         Box(
                             modifier = Modifier
-                                .size(136.dp)
+                                .size(120.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(BrandTeal, AccentCyan)
-                                    )
+                                    Brush.linearGradient(listOf(BrandTeal, AccentCyan))
                                 )
                         )
-                        // White border
                         Box(
                             modifier = Modifier
-                                .size(128.dp)
+                                .size(112.dp)
                                 .clip(CircleShape)
-                                .background(White)
+                                .background(Cream)
                         )
-                        // Avatar image
                         AsyncImage(
                             model = profile.avatarUrl,
                             contentDescription = profile.name,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
+                            modifier = Modifier.size(104.dp).clip(CircleShape)
                         )
                     }
 
@@ -156,7 +142,7 @@ fun ProfileScreen(
                         text = profile.name,
                         fontFamily = NotoSerifFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
+                        fontSize = 26.sp,
                         color = PrimaryText,
                         letterSpacing = (-0.3).sp
                     )
@@ -169,24 +155,33 @@ fun ProfileScreen(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
                             tint = BrandTeal,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Text(
                             text = profile.location,
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            color = SecondaryText
+                            fontSize = 14.sp,
+                            color = SecondaryText.copy(alpha = 0.8f)
                         )
                     }
+
+                    // Bio / tagline
+                    Text(
+                        text = "Slow traveller · Gastronome · Art lover",
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = SecondaryText.copy(alpha = 0.55f)
+                    )
                 }
             }
 
-            // Stats grid
+            // ── Stats ─────────────────────────────────────────────────────
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     StatCard(
                         value = profile.savedCount.toString(),
@@ -209,12 +204,12 @@ fun ProfileScreen(
                 }
             }
 
-            // Nomadly Club premium CTA card
+            // ── Nomadly Club premium card ─────────────────────────────────
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(32.dp))
+                        .clip(RoundedCornerShape(28.dp))
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(BrandTeal, TealAlt, Color(0xFF004B4C))
@@ -222,38 +217,31 @@ fun ProfileScreen(
                         )
                         .padding(24.dp)
                 ) {
-                    // Decorative cyan blur orb (top-right)
+                    // Decorative glow
                     Box(
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(110.dp)
                             .align(Alignment.TopEnd)
-                            .blur(50.dp)
-                            .background(
-                                AccentCyan.copy(alpha = 0.5f),
-                                shape = CircleShape
-                            )
+                            .blur(45.dp)
+                            .background(AccentCyan.copy(alpha = 0.45f), CircleShape)
                     )
 
-                    // Sparkle icon (top-right corner)
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = null,
                         tint = AccentCyan,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.TopEnd)
-                            .padding(0.dp)
+                        modifier = Modifier.size(22.dp).align(Alignment.TopEnd)
                     )
 
                     Column(
-                        modifier = Modifier.fillMaxWidth(0.75f),
+                        modifier = Modifier.fillMaxWidth(0.78f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "Nomadly Club",
                             fontFamily = NotoSerifFontFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
                             color = White,
                             letterSpacing = (-0.3).sp
                         )
@@ -262,7 +250,7 @@ fun ProfileScreen(
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 13.sp,
-                            color = White.copy(alpha = 0.80f),
+                            color = White.copy(alpha = 0.78f),
                             lineHeight = 20.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -271,7 +259,7 @@ fun ProfileScreen(
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(White)
                                 .clickable {}
-                                .padding(horizontal = 24.dp, vertical = 12.dp)
+                                .padding(horizontal = 22.dp, vertical = 11.dp)
                         ) {
                             Text(
                                 text = "Upgrade Now",
@@ -285,7 +273,7 @@ fun ProfileScreen(
                 }
             }
 
-            // Travel Style section
+            // ── Travel Style ───────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -296,20 +284,13 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Travel Style",
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 11.sp,
-                            color = SecondaryText,
-                            letterSpacing = 1.8.sp
-                        )
+                        ProfileSectionLabel("Travel Style")
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(CreamSurface)
                                 .clickable {}
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
                             Text(
                                 text = "MODIFY",
@@ -317,7 +298,7 @@ fun ProfileScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 10.sp,
                                 color = BrandTeal,
-                                letterSpacing = 1.4.sp
+                                letterSpacing = 1.2.sp
                             )
                         }
                     }
@@ -327,91 +308,42 @@ fun ProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         profile.travelStyles.forEach { style ->
-                            StyleChip(
-                                label = style,
-                                isActive = true
-                            )
+                            StyleChip(label = style, isActive = true)
                         }
                     }
                 }
             }
 
-            // Preferences section
+            // ── My Account ────────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = "My Account",
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 11.sp,
-                        color = SecondaryText,
-                        letterSpacing = 1.8.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(White)
-                    ) {
-                        ProfileListItem(
-                            icon = Icons.Default.Favorite,
-                            title = "My Favourites",
-                            onClick = {}
-                        )
+                    ProfileSectionLabel("My Account")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ProfileGroup {
+                        ProfileListItem(icon = Icons.Default.Favorite, title = "My Favourites", onClick = {})
                         ProfileDivider()
-                        ProfileListItem(
-                            icon = Icons.Default.History,
-                            title = "Travel History",
-                            onClick = {}
-                        )
+                        ProfileListItem(icon = Icons.Default.History, title = "Travel History", onClick = {})
                         ProfileDivider()
-                        ProfileListItem(
-                            icon = Icons.Default.CreditCard,
-                            title = "Payment Methods",
-                            onClick = {}
-                        )
+                        ProfileListItem(icon = Icons.Default.CreditCard, title = "Payment Methods", onClick = {})
                     }
                 }
             }
 
-            // App Settings section
+            // ── Settings ─────────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = "Settings",
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 11.sp,
-                        color = SecondaryText,
-                        letterSpacing = 1.8.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(White)
-                    ) {
-                        ProfileListItem(
-                            icon = Icons.Default.Settings,
-                            title = "General Settings",
-                            onClick = {}
-                        )
+                    ProfileSectionLabel("Settings")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ProfileGroup {
+                        ProfileListItem(icon = Icons.Default.Settings, title = "General Settings", onClick = {})
                         ProfileDivider()
-                        ProfileListItem(
-                            icon = Icons.Default.Lock,
-                            title = "Privacy & Security",
-                            onClick = {}
-                        )
+                        ProfileListItem(icon = Icons.Default.Lock, title = "Privacy & Security", onClick = {})
                         ProfileDivider()
                         ProfileListItem(
                             icon = Icons.Default.Logout,
@@ -424,15 +356,38 @@ fun ProfileScreen(
                 }
             }
 
-            // Bottom spacer
             item {
                 Spacer(
                     modifier = Modifier
-                        .height(128.dp)
+                        .height(120.dp)
                         .navigationBarsPadding()
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileSectionLabel(text: String) {
+    Text(
+        text = text.uppercase(),
+        fontFamily = ManropeFontFamily,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 10.sp,
+        color = SecondaryText.copy(alpha = 0.45f),
+        letterSpacing = 1.8.sp
+    )
+}
+
+@Composable
+private fun ProfileGroup(content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(White)
+    ) {
+        content()
     }
 }
 
@@ -448,7 +403,7 @@ private fun ProfileListItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(horizontal = 20.dp, vertical = 17.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -456,12 +411,23 @@ private fun ProfileListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            androidx.compose.material3.Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (titleColor == PrimaryText) BrandTeal else titleColor,
-                modifier = Modifier.size(20.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (titleColor == PrimaryText) BrandTeal.copy(alpha = 0.08f)
+                        else titleColor.copy(alpha = 0.08f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (titleColor == PrimaryText) BrandTeal else titleColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
             Text(
                 text = title,
                 fontFamily = ManropeFontFamily,
@@ -474,7 +440,7 @@ private fun ProfileListItem(
             androidx.compose.material3.Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = SecondaryText.copy(alpha = 0.4f),
+                tint = SecondaryText.copy(alpha = 0.30f),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -486,9 +452,9 @@ private fun ProfileDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(start = 68.dp, end = 20.dp)
             .height(1.dp)
-            .background(Color(0xFFEBE8E1))
+            .background(SurfaceAlt.copy(alpha = 0.7f))
     )
 }
 
@@ -496,8 +462,6 @@ private fun ProfileDivider() {
 @Composable
 fun ProfileScreenPreview() {
     NomadlyTheme {
-        ProfileScreen(
-            navController = rememberNavController()
-        )
+        ProfileScreen(navController = rememberNavController())
     }
 }

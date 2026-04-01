@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -42,21 +41,22 @@ import com.nomadly.app.ui.theme.White
 fun BoardCard(
     board: Board,
     onClick: () -> Unit,
-    isTall: Boolean = true
+    isTall: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
-    val cardHeight = if (isTall) 420.dp else 300.dp
+    val cardHeight = if (isTall) 300.dp else 220.dp
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(cardHeight)
             .shadow(
-                elevation = 12.dp,
-                shape = RoundedCornerShape(48.dp),
-                ambientColor = Color(0x0F1C1C18),
-                spotColor = Color(0x0F1C1C18)
+                elevation = 10.dp,
+                shape = RoundedCornerShape(36.dp),
+                ambientColor = Color(0x0C1C1C18),
+                spotColor = Color(0x10000000)
             )
-            .clip(RoundedCornerShape(48.dp))
+            .clip(RoundedCornerShape(36.dp))
             .clickable { onClick() }
     ) {
         // Full-bleed image
@@ -73,26 +73,24 @@ fun BoardCard(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.0f),
-                            Color.Black.copy(alpha = 0.55f)
-                        ),
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
+                        colorStops = arrayOf(
+                            0.0f to Color.Transparent,
+                            0.4f to Color.Black.copy(alpha = 0.05f),
+                            1.0f to Color.Black.copy(alpha = 0.62f)
+                        )
                     )
                 )
         )
 
-        // Info panel at bottom
+        // Info panel
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(16.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .background(White.copy(alpha = 0.88f))
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(12.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(White.copy(alpha = 0.90f))
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Column {
                 Row(
@@ -105,30 +103,28 @@ fun BoardCard(
                             text = board.title,
                             fontFamily = NotoSerifFontFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
+                            fontSize = 16.sp,
                             color = PrimaryText,
-                            lineHeight = 26.sp
+                            lineHeight = 22.sp
                         )
                         Text(
                             text = "${board.destinationCount} DESTINATIONS",
                             fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
                             color = BrandTeal,
-                            letterSpacing = 1.4.sp
+                            letterSpacing = 1.2.sp
                         )
                     }
 
-                    // Overlapping avatars
+                    // Overlapping collaborator avatars
                     if (board.collaboratorAvatars.isNotEmpty()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy((-10).dp)
-                        ) {
-                            board.collaboratorAvatars.take(3).forEachIndexed { index, avatarUrl ->
+                        Row(horizontalArrangement = Arrangement.spacedBy((-9).dp)) {
+                            board.collaboratorAvatars.take(3).forEach { avatarUrl ->
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .border(2.dp, BrandTeal, CircleShape)
+                                        .size(28.dp)
+                                        .border(1.5.dp, White, CircleShape)
                                         .clip(CircleShape)
                                 ) {
                                     AsyncImage(
@@ -142,7 +138,7 @@ fun BoardCard(
                             if (board.extraCollaborators > 0) {
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
+                                        .size(28.dp)
                                         .clip(CircleShape)
                                         .background(BrandTeal),
                                     contentAlignment = Alignment.Center
@@ -151,7 +147,7 @@ fun BoardCard(
                                         text = "+${board.extraCollaborators}",
                                         fontFamily = ManropeFontFamily,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 9.sp,
+                                        fontSize = 8.sp,
                                         color = White
                                     )
                                 }
@@ -166,12 +162,24 @@ fun BoardCard(
 
 @Preview(showBackground = true, backgroundColor = 0xFFFCF9F2)
 @Composable
-fun BoardCardPreview() {
+fun BoardCardTallPreview() {
     NomadlyTheme {
         BoardCard(
             board = MockRepository.boards.first(),
             onClick = {},
             isTall = true
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFCF9F2)
+@Composable
+fun BoardCardShortPreview() {
+    NomadlyTheme {
+        BoardCard(
+            board = MockRepository.boards[1],
+            onClick = {},
+            isTall = false
         )
     }
 }
